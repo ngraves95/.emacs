@@ -4,7 +4,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(ansi-color-names-vector ["#212526" "#ff4b4b" "#b4fa70" "#fce94f" "#729fcf" "#ad7fa8" "#8cc4ff" "#eeeeec"])
- '(company-backends (quote (company-elisp company-bbdb company-nxml company-css company-eclim company-semantic company-clang company-xcode company-ropemacs company-cmake company-capf company-anaconda (company-dabbrev-code company-gtags company-etags company-keywords) company-oddmuse company-files company-dabbrev)))
+ '(company-backends (quote (company-anaconda company-c-headers company-elisp company-bbdb company-nxml company-css company-eclim company-semantic company-clang company-xcode company-ropemacs company-cmake company-capf company-anaconda (company-dabbrev-code company-gtags company-etags company-keywords) company-oddmuse company-files company-dabbrev)))
  '(company-idle-delay 0.1)
  '(company-minimum-prefix-length 1)
  '(custom-enabled-themes (quote (tango-dark)))
@@ -59,7 +59,6 @@
 (add-to-list 'load-path "/home/ngraves3/.emacs.d/elpa/company-0.8.9/")
 (autoload 'company-mode "company" nil t)
 (add-hook 'after-init-hook 'global-company-mode)
-(add-to-list 'company-backends 'company-c-headers)
 
 ;; Map C-q to autocomplete
 (global-set-key "\C-q" 'company-complete)
