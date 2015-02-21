@@ -17,7 +17,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(company-preview ((t (:background "dim gray" :foreground "white"))))
+ '(company-preview ((t (:background "DarkOrange3" :foreground "gainsboro"))))
  '(company-preview-common ((t (:inherit company-preview :foreground "white"))))
  '(company-scrollbar-bg ((t (:inherit company-tooltip :background "gainsboro"))))
  '(company-scrollbar-fg ((t (:background "slategray"))))
@@ -40,7 +40,7 @@
 (show-paren-mode t)
 (set-face-background 'show-paren-match-face "#444444")
 
-;; c preferences
+;; C preferences
 (setq c-default-style "k&r")
 (setq-default c-basic-offset 4)
 
@@ -59,6 +59,7 @@
 (add-to-list 'load-path "/home/ngraves3/.emacs.d/elpa/company-0.8.9/")
 (autoload 'company-mode "company" nil t)
 (add-hook 'after-init-hook 'global-company-mode)
+(add-to-list 'company-backends 'company-c-headers)
 
 ;; Map C-q to autocomplete
 (global-set-key "\C-q" 'company-complete)
@@ -118,6 +119,12 @@
 (add-hook 'html-mode-hook (lambda () (local-set-key [67108910] (quote sgml-close-tag))))
 
 
+;; Add rainbow mode to CSS mode
+(add-hook 'css-mode-hook 'rainbow-mode)
+
+;; Nice dired mode
+(require 'dired-details)
+(dired-details-install)
 
 ;; M-l is already mapped to forward-word, map M-j to backward word
 ;; Alternate Navigation keys. Most of these weren't mapped to anything
@@ -131,3 +138,4 @@
 ;; Try mapping u->backward char and o->forward char
 (global-set-key "\M-o" 'forward-char)
 (global-set-key "\M-u" 'backward-char)
+(global-set-key "\C-u" 'backward-char)
