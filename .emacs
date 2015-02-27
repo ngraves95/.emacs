@@ -1,3 +1,4 @@
+;;; package --- summary
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -40,9 +41,6 @@
 (show-paren-mode t)
 (set-face-background 'show-paren-match-face "#444444")
 
-;; C preferences
-(setq c-default-style "k&r")
-(setq-default c-basic-offset 4)
 
 ;;bracket autocomplete
 
@@ -53,6 +51,10 @@
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 ;; Add .pixie to css mode
 (add-to-list 'auto-mode-alist '("\\.pixie\\'" . css-mode))
+
+;; Flycheck mode: syntax error highlightig (practically an IDE)
+(add-hook 'after-init-hook 'global-flycheck-mode)
+
 
 
 ;; Text completion - company package
@@ -111,19 +113,81 @@
 	    (set-buffer-file-coding-system 'undecided-dos t)
 	    (save-buffer)))))))
 
+
+(setq jump-stack '())
+;; Jump to function declaration feature
+(defun jump-to-function-declaration ()
+  "Feature to highlight a function name and jump to its declaration, similar to in an IDE"
+  (interactive)
+  ;; Consider adding a single paren to the beginning of the function finding regex
+  (let ((function-regex (concat "^[ ]*[A-Za-z][^ ]+[ ]+" (buffer-substring-no-properties
+						   (+ (point) (skip-chars-backward "^\"^ "))
+						   (+ (point) (skip-chars-forward "^;^)^(^[^]^,^\\.^\"^ "))))))
+    (push (buffer-name) jump-stack)
+    ;;(message "Regex is: %s" function-regex)
+    ;; try executing the command:
+    ;;     grep -r -E function-regex ../
+    (let ((containing-file (shell-command-to-string
+			    (concat "grep -r -l -E '" function-regex "' --exclude=*.gz ../"))))
+      ;; need to return early if nil
+      (setq containing-file (split-string containing-file "\n"))
+
+      (when (not (equal (car containing-file) ""))
+	 (switch-to-buffer (set-buffer
+			 (find-file-noselect
+			  (expand-file-name (car containing-file)))))
+
+	 (when (re-search-forward function-regex nil t 1)
+	    (goto-char (match-beginning 0)) ;; go to start of match
+	    )
+	 )
+      )
+    )
+  )
+
+(defun unjump-to-function-declaration ()
+  (interactive)
+  (let ((next-buffer (pop jump-stack)))
+    (when (not (equal next-buffer nil))
+      (kill-buffer)
+      (switch-to-buffer next-buffer)
+      )
+    )
+  )
+
+;; map f3  to jump-to-function-declaration and f4 to jump back
+(global-set-key (kbd "<f3>") 'jump-to-function-declaration)
+(global-set-key (kbd "<f4>") 'unjump-to-function-declaration)
+
 ;;Map C-c C-e to exec-file
 (global-set-key (kbd "C-c C-e") 'exec-file)
 
 ;; map C-. to close-tag
 (add-hook 'html-mode-hook (lambda () (local-set-key [67108910] (quote sgml-close-tag))))
 
-
-;; Add rainbow mode to CSS mode
+;; Add rainbow mode to CSS mode and Javascript mode
 (add-hook 'css-mode-hook 'rainbow-mode)
+(add-hook 'javascript-mode-hook 'rainbow-mode)
+
+;; C preferences
+(setq c-default-style "k&r")
+(setq-default c-basic-offset 4)
+(setq c-eldoc-includes "`pkg-config gtk+-2.0 --cflags` -I./ -I../ ")
+(load "c-eldoc")
+(add-hook 'c-mode-hook 'c-turn-on-eldoc-mode)
 
 ;; Nice dired mode
 (require 'dired-details)
 (dired-details-install)
+
+
+
+;; Window jump nav keys. use C-c + i-j-k-l to move around
+(global-set-key (kbd "C-c l") 'windmove-right)
+(global-set-key (kbd "C-c j") 'windmove-left)
+(global-set-key (kbd "C-c k") 'windmove-down)
+(global-set-key (kbd "C-c i") 'windmove-up)
+
 
 ;; M-l is already mapped to forward-word, map M-j to backward word
 ;; Alternate Navigation keys. Most of these weren't mapped to anything
@@ -138,3 +202,7 @@
 (global-set-key "\M-o" 'forward-char)
 (global-set-key "\M-u" 'backward-char)
 (global-set-key "\C-u" 'backward-char)
+
+
+(provide '.emacs)
+;;; .emacs ends here
