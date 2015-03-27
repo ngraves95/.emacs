@@ -78,8 +78,6 @@
 (package-initialize) ;; You might already have this line
 
 
-
-
 (defun replace-all (old new)
   "Function to replace all instances of a string with another"
   (interactive "sString to replace: \nsReplace %s with: ")
@@ -114,16 +112,16 @@
 	    (save-buffer)))))))
 
 
-(setq jump-stack '())
+(setq decl-stack '())
 ;; Jump to function declaration feature
 (defun jump-to-function-declaration ()
   "Feature to highlight a function name and jump to its declaration, similar to in an IDE"
   (interactive)
   ;; Consider adding a single paren to the beginning of the function finding regex
-  (let ((function-regex (concat "^[ ]*[A-Za-z][^ ]+[ ]+" (buffer-substring-no-properties
-						   (+ (point) (skip-chars-backward "^\"^ "))
-						   (+ (point) (skip-chars-forward "^;^)^(^[^]^,^\\.^\"^ "))))))
-    (push (buffer-name) jump-stack)
+  (let ((function-regex (concat "^[#\\(]?[ ]*[A-Za-z][^ ]+[ ]+" (buffer-substring-no-properties
+						   (+ (point) (skip-chars-backward "A-Za-z0-9_\\-"))
+						   (+ (point) (skip-chars-forward "A-Za-z0-9_\\-")))))) ;; "^;^)^(^[^]^,^\\.^\"^ "
+    (push (buffer-name) decl-stack)
     ;;(message "Regex is: %s" function-regex)
     ;; try executing the command:
     ;;     grep -r -E function-regex ../
@@ -147,15 +145,56 @@
 
 (defun unjump-to-function-declaration ()
   (interactive)
-  (let ((next-buffer (pop jump-stack)))
-    (when (not (equal next-buffer nil))
+  (let ((next-buffer (pop decl-stack)))
+    (when (and (not (equal next-buffer nil))
+	       (not (equal (buffer-name) next-buffer)))
       (kill-buffer)
       (switch-to-buffer next-buffer)
       )
     )
   )
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Text-Jump
+;;;
+;;; Functions for setting jump points for quick navigation
+;;; through pages. they allow  quick navigation to the last
+;;; point of inserted text. currently only works backwards,
+;;; so after jumping to a point of text, you cannot jump
+;;; forward.
+;;;
+;;; Created by Nick Graves 3/27/15
+;;;
+(setq jump-stack '())
+(defun set-jump-point ()
+  "Sets a jump point to return to."
+  (interactive)
+  (push (list (current-buffer) (point)) jump-stack))
+
+(defun goto-jump-point ()
+  "Returns to the most recently placed jump point."
+  (interactive)
+  (when (not (equal jump-stack nil))
+    (let ((buffer-point (pop jump-stack)))
+      (switch-to-buffer (car buffer-point))
+      (goto-char (car (cdr buffer-point))))))
+
+;; advise set-jump-point on the self-insert-command function so it automatically tracks text insertion. this command is used everytime a key is pressed.
+;; it will jump to the beginning of the last text burst (where a text burst is defined as a series of keystrokes uninterrupted by non-deletion movement)
+(defadvice self-insert-command (before track-text-insertion)
+  "Everytime text is entered in the buffer, a jump is added to the jump-stack. This allows for jumping to last inserted text"
+  (when (and (not (eq last-command 'self-insert-command))
+	   (not (eq last-command 'autopair-backspace))) ; always in autopair mode. use delete-backward-char when not.
+      (set-jump-point)))
+
+;; Activate text jump advice
+(ad-activate 'self-insert-command)
+
+;;; End jump point nav
+;;;;;;;;;;;;;;;;;;;;;;
+
 ;; map f3  to jump-to-function-declaration and f4 to jump back
+;; just like in an IDE
 (global-set-key (kbd "<f3>") 'jump-to-function-declaration)
 (global-set-key (kbd "<f4>") 'unjump-to-function-declaration)
 
@@ -164,6 +203,7 @@
 
 ;; map C-. to close-tag
 (add-hook 'html-mode-hook (lambda () (local-set-key [67108910] (quote sgml-close-tag))))
+(add-hook 'html-mode-hook (lambda () (local-set-key (kbd "TAB") 'sgml-indent-line)))
 
 ;; Add rainbow mode to CSS mode and Javascript mode
 (add-hook 'css-mode-hook 'rainbow-mode)
@@ -180,8 +220,6 @@
 (require 'dired-details)
 (dired-details-install)
 
-
-
 ;; Window jump nav keys. use C-c + i-j-k-l to move around
 (global-set-key (kbd "C-c l") 'windmove-right)
 (global-set-key (kbd "C-c j") 'windmove-left)
@@ -195,14 +233,31 @@
 (global-set-key "\M-j" 'backward-word)
 (global-set-key "\M-l" 'forward-word)
 (global-set-key "\M-i" 'previous-line)
-(global-set-key "\M-p" 'previous-line)
 (global-set-key "\M-k" 'next-line)
-(global-set-key "\M-n" 'next-line)
+
+;; Jumps 4 lines per command
+(global-set-key "\M-n" '(lambda ()
+			  (interactive)
+			  (dotimes (number 4 nil)
+			    (next-line))))
+
+;; Jumps 4 lines per command
+(global-set-key "\M-p" '(lambda ()
+			  (interactive)
+			  (dotimes (number 4 nil)
+			    (previous-line))))
+
 ;; Try mapping u->backward char and o->forward char
 (global-set-key "\M-o" 'forward-char)
 (global-set-key "\M-u" 'backward-char)
-(global-set-key "\C-u" 'backward-char)
 
+;; Set keys for jump navigation
+(global-set-key "\M-[" 'set-jump-point)
+(global-set-key "\M-]" 'goto-jump-point)
+
+
+(global-set-key (kbd "C-(") 'kmacro-start-macro-or-insert-counter)
+(global-set-key (kbd "C-)") 'kmacro-end-or-call-macro)
 
 (provide '.emacs)
 ;;; .emacs ends here
