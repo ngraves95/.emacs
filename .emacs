@@ -41,6 +41,13 @@
 (show-paren-mode t)
 (set-face-background 'show-paren-match-face "#444444")
 
+;; Setting background color in terminal
+(defun on-after-init ()
+  (unless (display-graphic-p (selected-frame))
+    (set-face-background 'default "#212526" (selected-frame))))
+
+(add-hook 'window-setup-hook 'on-after-init)
+
 
 ;;bracket autocomplete
 
@@ -55,6 +62,9 @@
 ;; Flycheck mode: syntax error highlightig (practically an IDE)
 (add-hook 'after-init-hook 'global-flycheck-mode)
 
+;; Make scrolling better
+(setq mouse-wheel-progressive-speed nil)
+(setq mouse-wheel-scroll-amount '(3))
 
 
 ;; Text completion - company package
@@ -136,12 +146,8 @@
 			  (expand-file-name (car containing-file)))))
 
 	 (when (re-search-forward function-regex nil t 1)
-	    (goto-char (match-beginning 0)) ;; go to start of match
-	    )
-	 )
-      )
-    )
-  )
+	    (goto-char (match-beginning 0))))))) ;; go to start of match
+
 
 (defun unjump-to-function-declaration ()
   (interactive)
@@ -149,10 +155,10 @@
     (when (and (not (equal next-buffer nil))
 	       (not (equal (buffer-name) next-buffer)))
       (kill-buffer)
-      (switch-to-buffer next-buffer)
-      )
-    )
-  )
+      (switch-to-buffer next-buffer))))
+
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Text-Jump
@@ -201,6 +207,8 @@
 ;;Map C-c C-e to exec-file
 (global-set-key (kbd "C-c C-e") 'exec-file)
 
+
+;;; HTML / CSS
 ;; map C-. to close-tag
 (add-hook 'html-mode-hook (lambda () (local-set-key [67108910] (quote sgml-close-tag))))
 (add-hook 'html-mode-hook (lambda () (local-set-key (kbd "TAB") 'sgml-indent-line)))
@@ -209,12 +217,24 @@
 (add-hook 'css-mode-hook 'rainbow-mode)
 (add-hook 'javascript-mode-hook 'rainbow-mode)
 
-;; C preferences
+;;; C preferences
 (setq c-default-style "k&r")
 (setq-default c-basic-offset 4)
 (setq c-eldoc-includes "`pkg-config gtk+-2.0 --cflags` -I./ -I../ ")
 (load "c-eldoc")
 (add-hook 'c-mode-hook 'c-turn-on-eldoc-mode)
+(add-hook 'c-mode-hook (lambda () (local-set-key (kbd "<f2>") 'man-follow)))
+(add-hook 'c-mode-hook (lambda () (local-set-key (kbd "<f1>") 'delete-other-windows)))
+
+;;; PYTHON
+(defun pydoc-under-point ()
+  (interactive)
+  (pydoc (buffer-substring-no-properties
+			     (+ (point) (skip-chars-backward "A-Za-z0-9_\\-"))
+			     (+ (point) (skip-chars-forward "A-Za-z0-9_\\-")))))
+
+(add-hook 'python-mode-hook (lambda () (local-set-key (kbd "<f2>") 'pydoc-under-point)))
+(global-set-key (kbd "<f1>") 'delete-window)
 
 ;; Nice dired mode
 (require 'dired-details)
