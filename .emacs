@@ -269,20 +269,21 @@
 (global-set-key "\M-i" 'previous-line)
 (global-set-key "\M-k" 'next-line)
 
-;; Jumps 4 lines per command
-(global-set-key "\M-n" '(lambda ()
-			  (interactive)
-			  (dotimes (number 4 nil)
-			    (next-line))))
-
+;; Jumps to the beginning of the next paragraph
+;; or consecutive lines of code.
 (global-set-key "\M-n" (lambda ()
-			  (interactive)
-			  (search-forward-regexp "^$")
-			  (forward-char)))
+			 (interactive)
+			 (when (eq mark-active nil)
+			   (set-mark-command nil))
+			 (search-forward-regexp "^$")
+			 (forward-char)))
 
-;; Jumps to the paragraph above this.
+;; Jumps to the beginning of the previous paragraph
+;; or consecutive lines of code.
 (global-set-key "\M-p" (lambda ()
 			 (interactive)
+			 (when (eq mark-active nil)
+			   (set-mark-command nil))
 			 (backward-char)
 			 (backward-char)
 			 (search-backward-regexp "^$")
@@ -295,6 +296,9 @@
 ;; Set keys for jump navigation
 (global-set-key "\M-[" 'set-jump-point)
 (global-set-key "\M-]" 'goto-jump-point)
+
+;; Future development: make a binding for git add/commit/push. bind one chord to git
+;; and the others to add/commit/push. Consideration: \M-# for git
 
 
 (global-set-key (kbd "C-(") 'kmacro-start-macro-or-insert-counter)
