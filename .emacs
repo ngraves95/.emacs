@@ -207,6 +207,8 @@
 ;;Map C-c C-e to exec-file
 (global-set-key (kbd "C-c C-e") 'exec-file)
 
+;; Unset lisp completion at point
+;;(global-unset-key "\C-\M-i")
 
 ;;; HTML / CSS
 ;; map C-. to close-tag
@@ -234,6 +236,18 @@
 			     (+ (point) (skip-chars-forward "A-Za-z0-9_\\-")))))
 
 (add-hook 'python-mode-hook (lambda () (local-set-key (kbd "<f2>") 'pydoc-under-point)))
+;; Indentation is frustrating with default python indenting. Map tab to and C-i to shift right
+;;     and shift-tab and C-I to shift left
+(add-hook 'python-mode-hook (lambda () (progn
+					 (local-set-key (kbd "C-i") 'python-indent-shift-right)
+					 (local-set-key (kbd "TAB") 'python-indent-shift-right))))
+(add-hook 'python-mode-hook (lambda () (progn
+					 (local-set-key  "\C-\M-i" 'python-indent-shift-left)
+					 (local-set-key (kbd "<S-tab>") 'python-indent-shift-left))))
+
+
+
+;; Bind f1 to delete window. F1 was previously a help function I never used
 (global-set-key (kbd "<f1>") 'delete-window)
 
 ;; Nice dired mode
@@ -261,11 +275,18 @@
 			  (dotimes (number 4 nil)
 			    (next-line))))
 
-;; Jumps 4 lines per command
-(global-set-key "\M-p" '(lambda ()
+(global-set-key "\M-n" (lambda ()
 			  (interactive)
-			  (dotimes (number 4 nil)
-			    (previous-line))))
+			  (search-forward-regexp "^$")
+			  (forward-char)))
+
+;; Jumps to the paragraph above this.
+(global-set-key "\M-p" (lambda ()
+			 (interactive)
+			 (backward-char)
+			 (backward-char)
+			 (search-backward-regexp "^$")
+			 (forward-char)))
 
 ;; Try mapping u->backward char and o->forward char
 (global-set-key "\M-o" 'forward-char)
