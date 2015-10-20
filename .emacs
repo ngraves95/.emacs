@@ -1,18 +1,50 @@
 ;;; package --- summary
+;;; Commentary:
+;;; Code:
+(tool-bar-mode -1)
+(setq inhibit-startup-screen t)
+
+(require 'package) ;; You might already have this line
+(add-to-list 'package-archives
+             '("melpa" . "http://melpa.org/packages/") t)
+(when (< emacs-major-version 24)
+  ;; For important compatibility libraries like cl-lib
+  (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/")))
+(package-initialize) ;; You might already have this line
+
+(defun load-or-install-package (package-name)
+  "Load PACKAGE-NAME, and if that fails, install it."
+  (when (not (require package-name nil 'return-nil-instead-of-error))
+    (package-install package-name)))
+
+(defun load-all-packages (package-list)
+  "Load all packages in a PACKAGE-LIST."
+  (when (not (eq package-list nil))
+    (load-or-install-package (car package-list))
+    (load-all-packages (cdr package-list))))
+
+(load-all-packages '(
+		     autopair
+		     company
+		     flycheck
+		     god-mode
+		     god-mode-isearch
+		     shell-toggle
+		     dired-details
+		     ))
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(ansi-color-names-vector ["#212526" "#ff4b4b" "#b4fa70" "#fce94f" "#729fcf" "#ad7fa8" "#8cc4ff" "#eeeeec"])
- '(company-backends (quote (company-anaconda company-c-headers company-elisp company-bbdb company-nxml company-css company-eclim company-semantic company-clang company-xcode company-ropemacs company-cmake company-capf company-anaconda (company-dabbrev-code company-gtags company-etags company-keywords) company-oddmuse company-files company-dabbrev)))
+ '(company-backends (quote (company-elisp company-bbdb company-nxml company-css company-eclim company-semantic company-clang company-xcode company-ropemacs company-cmake company-capf (company-dabbrev-code company-gtags company-etags company-keywords) company-oddmuse company-files company-dabbrev)))
  '(company-idle-delay 0.1)
  '(company-minimum-prefix-length 1)
  '(custom-enabled-themes (quote (tango-dark)))
- '(custom-safe-themes (quote ("c40361c0bbeb6ad640e66234c7f903c84cf667e8a0162630040866b1f9275a18" default)))
- '(inhibit-startup-screen t)
- '(show-paren-mode t)
- '(tool-bar-mode nil))
+ '(custom-safe-themes (quote ("c40361c0bbeb6ad640e66234c7f903c84cf667e8a0162630040866b1f9275a18" default))))
+
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -45,51 +77,22 @@
 (defun on-after-init ()
   (unless (display-graphic-p (selected-frame))
     (set-face-background 'default "#212526" (selected-frame))))
-
 (add-hook 'window-setup-hook 'on-after-init)
-
-
-;;bracket autocomplete
-
-(require 'autopair)
-(autopair-global-mode) ;; enable autopair in all buffers
-(global-linum-mode t)
-(tool-bar-mode -1)
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
-;; Add .pixie to css mode
-(add-to-list 'auto-mode-alist '("\\.pixie\\'" . css-mode))
-
-;; Flycheck mode: syntax error highlightig (practically an IDE)
 (add-hook 'after-init-hook 'global-flycheck-mode)
+
+(global-linum-mode t)
 
 ;; Make scrolling better
 (setq mouse-wheel-progressive-speed nil)
 (setq mouse-wheel-scroll-amount '(3))
 
-
 ;; Text completion - company package
-(add-to-list 'load-path "/home/ngraves3/.emacs.d/elpa/company-0.8.9/")
-(autoload 'company-mode "company" nil t)
+(add-to-list 'load-path "/home/ngraves3/.emacs.d/elpa/company-0.8.12/")
 (add-hook 'after-init-hook 'global-company-mode)
 
-;; Map C-q to autocomplete
-(global-set-key "\C-q" 'company-complete)
-(global-set-key "\M-q" 'company-complete)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Here be some extra package magic ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(require 'package) ;; You might already have this line
-(add-to-list 'package-archives
-             '("melpa" . "http://melpa.org/packages/") t)
-(when (< emacs-major-version 24)
-  ;; For important compatibility libraries like cl-lib
-  (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/")))
-(package-initialize) ;; You might already have this line
-
-
 (defun replace-all (old new)
-  "Function to replace all instances of a string with another"
+  "Function to replace all instances of a string with another."
   (interactive "sString to replace: \nsReplace %s with: ")
   (let ((number-replaced 1))
     (goto-char(point-min))
@@ -100,27 +103,6 @@
 	     number-replaced
 	     old
 	     new)))
-
-(defun exec-file ()
-  "Function to execute the current file, however is necessary"
-  (interactive)
-  (let ((relative-name (concat "./" (buffer-name))))
-    (set-file-modes relative-name #o755)
-    (when (eq 126 (shell-command relative-name))
-      ;; value of 126 == permission denied
-      (let ((home-name (concat "~/" (buffer-name))))
-	(let ((nix-ending (string-match "unix" (symbol-name buffer-file-coding-system))))
-	  (set-buffer-file-coding-system 'undecided-unix t)
-	  (save-buffer)
-	  (copy-file relative-name home-name)
-	  (set-file-modes home-name #o755)
-
-	  (shell-command home-name)
-	  (delete-file home-name)
-	  (when (eq nix-ending nil)
-	    (set-buffer-file-coding-system 'undecided-dos t)
-	    (save-buffer)))))))
-
 
 (setq decl-stack '())
 ;; Jump to function declaration feature
@@ -157,9 +139,6 @@
       (kill-buffer)
       (switch-to-buffer next-buffer))))
 
-
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Text-Jump
 ;;;
@@ -173,12 +152,12 @@
 ;;;
 (setq jump-stack '())
 (defun set-jump-point ()
-  "Sets a jump point to return to."
+  "Set a jump point to return to."
   (interactive)
   (push (list (current-buffer) (point)) jump-stack))
 
 (defun goto-jump-point ()
-  "Returns to the most recently placed jump point."
+  "Return to the most recently placed jump point."
   (interactive)
   (when (not (equal jump-stack nil))
     (let ((buffer-point (pop jump-stack)))
@@ -207,9 +186,6 @@
 ;;Map C-c C-e to exec-file
 (global-set-key (kbd "C-c C-e") 'exec-file)
 
-;; Unset lisp completion at point
-;;(global-unset-key "\C-\M-i")
-
 ;;; HTML / CSS
 ;; map C-. to close-tag
 (add-hook 'html-mode-hook (lambda () (local-set-key [67108910] (quote sgml-close-tag))))
@@ -220,11 +196,8 @@
 (add-hook 'javascript-mode-hook 'rainbow-mode)
 
 ;;; C preferences
-(setq c-default-style "k&r")
-(setq-default c-basic-offset 4)
-(setq c-eldoc-includes "`pkg-config gtk+-2.0 --cflags` -I./ -I../ ")
-(load "c-eldoc")
-(add-hook 'c-mode-hook 'c-turn-on-eldoc-mode)
+(setq c-default-style "linux")
+(setq-default c-basic-offset 8)
 (add-hook 'c-mode-hook (lambda () (local-set-key (kbd "<f2>") 'man-follow)))
 (add-hook 'c-mode-hook (lambda () (local-set-key (kbd "<f1>") 'delete-other-windows)))
 
@@ -245,21 +218,14 @@
 					 (local-set-key  "\C-\M-i" 'python-indent-shift-left)
 					 (local-set-key (kbd "<S-tab>") 'python-indent-shift-left))))
 
-
-
 ;; Bind f1 to delete window. F1 was previously a help function I never used
 (global-set-key (kbd "<f1>") 'delete-window)
-
-;; Nice dired mode
-(require 'dired-details)
-(dired-details-install)
 
 ;; Window jump nav keys. use C-c + i-j-k-l to move around
 (global-set-key (kbd "C-c l") 'windmove-right)
 (global-set-key (kbd "C-c j") 'windmove-left)
 (global-set-key (kbd "C-c k") 'windmove-down)
 (global-set-key (kbd "C-c i") 'windmove-up)
-
 
 ;; M-l is already mapped to forward-word, map M-j to backward word
 ;; Alternate Navigation keys. Most of these weren't mapped to anything
@@ -293,16 +259,44 @@
 (global-set-key "\M-o" 'forward-char)
 (global-set-key "\M-u" 'backward-char)
 
+;; Gobble up all whitespace between "words"
+(defun gobble-whitespace ()
+  "Delete all whitespace, tabs, and newlines until next non-whitespace character."
+  (interactive)
+  (while (or (equal (string (char-after)) " ")
+	     (equal (string (char-after)) "\t")
+	     (equal (string (char-after)) "\n")
+	     (equal (string (char-after)) "\r"))
+    (delete-char 1)))
+
+(global-set-key (kbd "C-\\") 'gobble-whitespace)
+
 ;; Set keys for jump navigation
 (global-set-key "\M-[" 'set-jump-point)
 (global-set-key "\M-]" 'goto-jump-point)
 
-;; Future development: make a binding for git add/commit/push. bind one chord to git
-;; and the others to add/commit/push. Consideration: \M-# for git
-
-
-(global-set-key (kbd "C-(") 'kmacro-start-macro-or-insert-counter)
+(global-set-key (kbd "C-(") 'kmacro-start-macro)
 (global-set-key (kbd "C-)") 'kmacro-end-or-call-macro)
 
+(autopair-global-mode) ;; enable autopair in all buffers
+
+(add-hook 'after-init-hook 'c-turn-on-eldoc-mode)
+
+(global-set-key (kbd "C-q") 'beginning-of-line-text)
+
+(define-key isearch-mode-map (kbd "<escape>") 'god-mode-isearch-activate)
+(define-key god-mode-isearch-map (kbd "<escape>") 'god-mode-isearch-disable)
+(global-set-key (kbd "<escape>") 'god-mode)
+
+(global-set-key (kbd "M-!") 'async-shell-command)
+(global-set-key (kbd "M-s M-s") 'shell-toggle)
+
+(define-key god-local-mode-map (kbd ".") 'repeat)
+(define-key god-local-mode-map (kbd "i") 'god-mode)
+(add-to-list 'god-exempt-major-modes 'dired-mode)
+(add-to-list 'god-exempt-major-modes 'term-mode)
+(add-to-list 'god-exempt-major-modes 'shell-mode)
+
+(global-set-key (kbd "M-q") 'keyboard-quit)
 (provide '.emacs)
 ;;; .emacs ends here
