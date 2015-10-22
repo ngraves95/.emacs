@@ -12,27 +12,20 @@
   (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/")))
 (package-initialize) ;; You might already have this line
 
+;; Deployment
 (defun load-or-install-package (package-name)
   "Load PACKAGE-NAME, and if that fails, install it."
   (when (not (require package-name nil 'return-nil-instead-of-error))
     (package-install package-name)))
 
-(defun load-all-packages (package-list)
-  "Load all packages in a PACKAGE-LIST."
-  (when (not (eq package-list nil))
-    (load-or-install-package (car package-list))
-    (load-all-packages (cdr package-list))))
-
-(load-all-packages '(
-		     autopair
-		     company
-		     flycheck
-		     god-mode
-		     god-mode-isearch
-		     shell-toggle
-		     dired-details
-		     ))
-
+(mapc 'load-or-install-package '(autopair
+				 company
+				 flycheck
+				 god-mode
+				 god-mode-isearch
+				 shell-toggle
+				 dired-details))
+;; Customizations
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -92,7 +85,7 @@
 (add-hook 'after-init-hook 'global-company-mode)
 
 (defun replace-all (old new)
-  "Function to replace all instances of a string with another."
+  "Replace all instances of OLD with NEW."
   (interactive "sString to replace: \nsReplace %s with: ")
   (let ((number-replaced 1))
     (goto-char(point-min))
@@ -107,7 +100,7 @@
 (setq decl-stack '())
 ;; Jump to function declaration feature
 (defun jump-to-function-declaration ()
-  "Feature to highlight a function name and jump to its declaration, similar to in an IDE"
+  "Highlight a function name and jump to its declaration, similar to in an IDE."
   (interactive)
   ;; Consider adding a single paren to the beginning of the function finding regex
   (let ((function-regex (concat "^[#\\(]?[ ]*[A-Za-z][^ ]+[ ]+" (buffer-substring-no-properties
