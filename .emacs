@@ -20,11 +20,13 @@
 
 (mapc 'load-or-install-package '(autopair
 				 company
+				 dired-details
 				 flycheck
 				 god-mode
 				 god-mode-isearch
-				 shell-toggle
-				 dired-details))
+				 paredit
+				 shell-toggle))
+
 ;; Customizations
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -284,12 +286,35 @@
 (global-set-key (kbd "M-!") 'async-shell-command)
 (global-set-key (kbd "M-s M-s") 'shell-toggle)
 
-(define-key god-local-mode-map (kbd ".") 'repeat)
 (define-key god-local-mode-map (kbd "i") 'god-mode)
+
+(defun quick-search (char)
+  "Jump to next instance of CHAR."
+  (interactive "cChar: \n")
+  (forward-char 1)
+  (search-forward (string char))
+  (backward-char 1))
+
+(defun quick-search-reverse (char)
+  "Jump to previous instance of CHAR."
+  (interactive "cChar: \n")
+  (backward-char 1)
+  (search-backward (string char))
+  (forward-char 1))
+
+(global-set-key (kbd "C-z") 'quick-search)
+(global-set-key (kbd "C-.") 'quick-search)
+(define-key god-local-mode-map (kbd "z") 'quick-search)
+(define-key god-local-mode-map (kbd "Z") 'quick-search-reverse)
+
+(define-key paredit-mode-map (kbd ",") 'paredit-backward)
+(define-key paredit-mode-map (kbd ".") 'paredit-forward)
+
 (add-to-list 'god-exempt-major-modes 'dired-mode)
 (add-to-list 'god-exempt-major-modes 'term-mode)
 (add-to-list 'god-exempt-major-modes 'shell-mode)
 
 (global-set-key (kbd "M-q") 'keyboard-quit)
+
 (provide '.emacs)
 ;;; .emacs ends here
