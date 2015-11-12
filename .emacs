@@ -163,9 +163,11 @@
 ;; it will jump to the beginning of the last text burst (where a text burst is defined as a series of keystrokes uninterrupted by non-deletion movement)
 (defadvice self-insert-command (before track-text-insertion)
   "Everytime text is entered in the buffer, a jump is added to the jump-stack. This allows for jumping to last inserted text"
-  (when (and (not (eq last-command 'self-insert-command))
-	   (not (eq last-command 'autopair-backspace))) ; always in autopair mode. use delete-backward-char when not.
-      (set-jump-point)))
+  (when (and
+	 (not (eq last-command 'self-insert-command))
+	 (not (eq last-command 'autopair-backspace))
+	 (not (string-prefix-p "*" (string-trim (buffer-name)))))
+    (set-jump-point)))
 
 ;; Activate text jump advice
 (ad-activate 'self-insert-command)
@@ -298,14 +300,14 @@
 (defun quick-search-reverse (char)
   "Jump to previous instance of CHAR."
   (interactive "cChar: \n")
-  (backward-char 1)
-  (search-backward (string char))
-  (forward-char 1))
+  (search-backward (string char)))
 
-(global-set-key (kbd "C-z") 'quick-search)
+(global-set-key (kbd "C-,") 'quick-search-reverse)
 (global-set-key (kbd "C-.") 'quick-search)
-(define-key god-local-mode-map (kbd "z") 'quick-search)
-(define-key god-local-mode-map (kbd "Z") 'quick-search-reverse)
+(define-key god-local-mode-map (kbd "z") (lambda ()
+					   (interactive)
+					   (run-with-timer 0 nil 'execute-kbd-macro (kbd "RET"))
+					   (repeat-complex-command 1)))
 
 (define-key paredit-mode-map (kbd ",") 'paredit-backward)
 (define-key paredit-mode-map (kbd ".") 'paredit-forward)
@@ -316,5 +318,12 @@
 
 (global-set-key (kbd "M-q") 'keyboard-quit)
 
+;; Tags
+;; use the command:
+;;   find . -name "*.[MY_FILE_ENDINGS]" -print | etags -
+;;
+(global-set-key (kbd "M-,") 'pop-tag-mark)
+
 (provide '.emacs)
 ;;; .emacs ends here
+(put 'upcase-region 'disabled nil)
