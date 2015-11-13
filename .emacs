@@ -21,6 +21,7 @@
 (mapc 'load-or-install-package '(autopair
 				 company
 				 dired-details
+				 dired-subtree
 				 flycheck
 				 god-mode
 				 god-mode-isearch
@@ -315,6 +316,8 @@
 (add-to-list 'god-exempt-major-modes 'dired-mode)
 (add-to-list 'god-exempt-major-modes 'term-mode)
 (add-to-list 'god-exempt-major-modes 'shell-mode)
+
+(define-key dired-mode-map (kbd "i") 'dired-subtree-toggle)
 
 (global-set-key (kbd "M-q") 'keyboard-quit)
 
