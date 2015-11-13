@@ -100,41 +100,6 @@
 	     old
 	     new)))
 
-(setq decl-stack '())
-;; Jump to function declaration feature
-(defun jump-to-function-declaration ()
-  "Highlight a function name and jump to its declaration, similar to in an IDE."
-  (interactive)
-  ;; Consider adding a single paren to the beginning of the function finding regex
-  (let ((function-regex (concat "^[#\\(]?[ ]*[A-Za-z][^ ]+[ ]+" (buffer-substring-no-properties
-						   (+ (point) (skip-chars-backward "A-Za-z0-9_\\-"))
-						   (+ (point) (skip-chars-forward "A-Za-z0-9_\\-")))))) ;; "^;^)^(^[^]^,^\\.^\"^ "
-    (push (buffer-name) decl-stack)
-    ;;(message "Regex is: %s" function-regex)
-    ;; try executing the command:
-    ;;     grep -r -E function-regex ../
-    (let ((containing-file (shell-command-to-string
-			    (concat "grep -r -l -E '" function-regex "' --exclude=*.gz ../"))))
-      ;; need to return early if nil
-      (setq containing-file (split-string containing-file "\n"))
-
-      (when (not (equal (car containing-file) ""))
-	 (switch-to-buffer (set-buffer
-			 (find-file-noselect
-			  (expand-file-name (car containing-file)))))
-
-	 (when (re-search-forward function-regex nil t 1)
-	    (goto-char (match-beginning 0))))))) ;; go to start of match
-
-
-(defun unjump-to-function-declaration ()
-  (interactive)
-  (let ((next-buffer (pop decl-stack)))
-    (when (and (not (equal next-buffer nil))
-	       (not (equal (buffer-name) next-buffer)))
-      (kill-buffer)
-      (switch-to-buffer next-buffer))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Text-Jump
 ;;;
@@ -325,8 +290,15 @@
 ;; use the command:
 ;;   find . -name "*.[MY_FILE_ENDINGS]" -print | etags -
 ;;
+
+(defun generate-tags (file-endings proj-root)
+  "Generate tags for all files with FILE-ENDINGS in PROJ-ROOT."
+  (interactive "sFile endings: \nsProject root directory: \n")
+  (async-shell-command (format "pushd %s && find . -name \"*.[%s]\" -print | etags - && popd"
+				 proj-root file-endings)))
+
 (global-set-key (kbd "M-,") 'pop-tag-mark)
 
+(put 'upcase-region 'disabled nil)
 (provide '.emacs)
 ;;; .emacs ends here
-(put 'upcase-region 'disabled nil)
