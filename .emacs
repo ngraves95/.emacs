@@ -141,14 +141,6 @@
 ;;; End jump point nav
 ;;;;;;;;;;;;;;;;;;;;;;
 
-;; map f3  to jump-to-function-declaration and f4 to jump back
-;; just like in an IDE
-(global-set-key (kbd "<f3>") 'jump-to-function-declaration)
-(global-set-key (kbd "<f4>") 'unjump-to-function-declaration)
-
-;;Map C-c C-e to exec-file
-(global-set-key (kbd "C-c C-e") 'exec-file)
-
 ;;; HTML / CSS
 ;; map C-. to close-tag
 (add-hook 'html-mode-hook (lambda () (local-set-key [67108910] (quote sgml-close-tag))))
@@ -165,13 +157,6 @@
 (add-hook 'c-mode-hook (lambda () (local-set-key (kbd "<f1>") 'delete-other-windows)))
 
 ;;; PYTHON
-(defun pydoc-under-point ()
-  (interactive)
-  (pydoc (buffer-substring-no-properties
-			     (+ (point) (skip-chars-backward "A-Za-z0-9_\\-"))
-			     (+ (point) (skip-chars-forward "A-Za-z0-9_\\-")))))
-
-(add-hook 'python-mode-hook (lambda () (local-set-key (kbd "<f2>") 'pydoc-under-point)))
 ;; Indentation is frustrating with default python indenting. Map tab to and C-i to shift right
 ;;     and shift-tab and C-I to shift left
 (add-hook 'python-mode-hook (lambda () (progn
@@ -181,14 +166,22 @@
 					 (local-set-key  "\C-\M-i" 'python-indent-shift-left)
 					 (local-set-key (kbd "<S-tab>") 'python-indent-shift-left))))
 
-;; Bind f1 to delete window. F1 was previously a help function I never used
-(global-set-key (kbd "<f1>") 'delete-window)
-
+;;; Window Functions ;;;
 ;; Window jump nav keys. use C-c + i-j-k-l to move around
 (global-set-key (kbd "C-c l") 'windmove-right)
 (global-set-key (kbd "C-c j") 'windmove-left)
 (global-set-key (kbd "C-c k") 'windmove-down)
 (global-set-key (kbd "C-c i") 'windmove-up)
+
+;; This is a convenience for God mode so cl moves right, e.g.
+(global-set-key (kbd "C-c C-l") 'windmove-right)
+(global-set-key (kbd "C-c C-j") 'windmove-left)
+(global-set-key (kbd "C-c C-k") 'windmove-down)
+(global-set-key (kbd "C-c C-i") 'windmove-up)
+
+;; More conveniences for God mode.
+(global-set-key (kbd "C-x C-1") 'delete-other-windows)
+(global-set-key (kbd "C-x C-0") 'delete-window)
 
 ;; M-l is already mapped to forward-word, map M-j to backward word
 ;; Alternate Navigation keys. Most of these weren't mapped to anything
@@ -198,14 +191,16 @@
 (global-set-key "\M-i" 'previous-line)
 (global-set-key "\M-k" 'next-line)
 
+(global-set-key (kbd "C-'") 'backward-paragraph)
+(global-set-key (kbd "C-;") 'forward-paragraph)
+
 ;; Jumps to the beginning of the next paragraph
 ;; or consecutive lines of code.
 (global-set-key "\M-n" (lambda ()
 			 (interactive)
 			 (when (eq mark-active nil)
 			   (set-mark-command nil))
-			 (search-forward-regexp "^$")
-			 (forward-char)))
+			 (forward-paragraph)))
 
 ;; Jumps to the beginning of the previous paragraph
 ;; or consecutive lines of code.
@@ -213,10 +208,7 @@
 			 (interactive)
 			 (when (eq mark-active nil)
 			   (set-mark-command nil))
-			 (backward-char)
-			 (backward-char)
-			 (search-backward-regexp "^$")
-			 (forward-char)))
+			 (backward-paragraph)))
 
 ;; Try mapping u->backward char and o->forward char
 (global-set-key "\M-o" 'forward-char)
@@ -275,6 +267,8 @@
 					   (run-with-timer 0 nil 'execute-kbd-macro (kbd "RET"))
 					   (repeat-complex-command 1)))
 
+
+(global-set-key (kbd "C-<escape>") 'paredit-mode)
 (define-key paredit-mode-map (kbd ",") 'paredit-backward)
 (define-key paredit-mode-map (kbd ".") 'paredit-forward)
 
