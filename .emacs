@@ -191,8 +191,8 @@
 (global-set-key "\M-i" 'previous-line)
 (global-set-key "\M-k" 'next-line)
 
-(global-set-key (kbd "C-'") 'backward-paragraph)
-(global-set-key (kbd "C-;") 'forward-paragraph)
+(global-set-key (kbd "C-;") 'backward-paragraph)
+(global-set-key (kbd "C-l") 'forward-paragraph)
 
 ;; Jumps to the beginning of the next paragraph
 ;; or consecutive lines of code.
@@ -266,7 +266,6 @@
 					   (interactive)
 					   (run-with-timer 0 nil 'execute-kbd-macro (kbd "RET"))
 					   (repeat-complex-command 1)))
-
 
 (global-set-key (kbd "C-<escape>") 'paredit-mode)
 (define-key paredit-mode-map (kbd ",") 'paredit-backward)
