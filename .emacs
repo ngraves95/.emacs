@@ -71,13 +71,16 @@
 
 ;; Setting background color in terminal
 (defun on-after-init ()
-  (unless (display-graphic-p (selected-frame))
+  "Set terminal settings."
+  (if (display-graphic-p (selected-frame))
+      (global-linum-mode t)
     (set-face-background 'default "#212526" (selected-frame))))
+
 (add-hook 'window-setup-hook 'on-after-init)
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 (add-hook 'after-init-hook 'global-flycheck-mode)
 
-(global-linum-mode t)
+
 
 ;; Make scrolling better
 (setq mouse-wheel-progressive-speed nil)
