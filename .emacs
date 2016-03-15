@@ -162,12 +162,12 @@
 ;;; PYTHON
 ;; Indentation is frustrating with default python indenting. Map tab to and C-i to shift right
 ;;     and shift-tab and C-I to shift left
-(add-hook 'python-mode-hook (lambda () (progn
-					 (local-set-key (kbd "C-i") 'python-indent-shift-right)
-					 (local-set-key (kbd "TAB") 'python-indent-shift-right))))
-(add-hook 'python-mode-hook (lambda () (progn
-					 (local-set-key  "\C-\M-i" 'python-indent-shift-left)
-					 (local-set-key (kbd "<S-tab>") 'python-indent-shift-left))))
+;; (add-hook 'python-mode-hook (lambda () (progn
+;; 					 (local-set-key (kbd "C-i") 'python-indent-shift-right)
+;; 					 (local-set-key (kbd "TAB") 'python-indent-shift-right))))
+;; (add-hook 'python-mode-hook (lambda () (progn
+;; 					 (local-set-key  "\C-\M-i" 'python-indent-shift-left)
+;; 					 (local-set-key (kbd "<S-tab>") 'python-indent-shift-left))))
 
 ;;; Window Functions ;;;
 ;; Window jump nav keys. use C-c + i-j-k-l to move around
@@ -189,13 +189,24 @@
 ;; M-l is already mapped to forward-word, map M-j to backward word
 ;; Alternate Navigation keys. Most of these weren't mapped to anything
 ;; Can use either i-j-k-l as a keypad, or use M-p and M-n as training wheels
-(global-set-key "\M-j" 'backward-word)
-(global-set-key "\M-l" 'forward-word)
-(global-set-key "\M-i" 'previous-line)
-(global-set-key "\M-k" 'next-line)
 
-(global-set-key (kbd "C-;") 'backward-paragraph)
-(global-set-key (kbd "C-l") 'forward-paragraph)
+;; (global-set-key "\M-j" 'backward-word)
+;; (global-set-key "\M-l" 'forward-word)
+;; (global-set-key "\M-i" 'previous-line)
+;; (global-set-key "\M-k" 'next-line)
+
+(global-set-key "\M-j" (lambda ()
+			 (interactive)
+			 (next-logical-line)
+			 (recenter)))
+
+(global-set-key "\M-k" (lambda ()
+			 (interactive)
+			 (previous-logical-line)
+			 (recenter)))
+
+(global-set-key (kbd "C-'") 'backward-paragraph)
+(global-set-key (kbd "C-;") 'forward-paragraph)
 
 ;; Jumps to the beginning of the next paragraph
 ;; or consecutive lines of code.
@@ -294,6 +305,9 @@
 				 proj-root file-endings)))
 
 (global-set-key (kbd "M-,") 'pop-tag-mark)
+
+;; DocView
+(setq doc-view-ghostscript-program "/usr/bin/ghostscript")
 
 (put 'upcase-region 'disabled nil)
 (provide '.emacs)
