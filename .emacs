@@ -25,6 +25,7 @@
 				 flycheck
 				 god-mode
 				 god-mode-isearch
+				 google-this
 				 paredit
 				 shell-toggle))
 
