@@ -1,8 +1,13 @@
 ;;; package --- summary
 ;;; Commentary:
 ;;; Code:
-(tool-bar-mode -1)
 (setq inhibit-startup-screen t)
+(tool-bar-mode nil)
+
+;; Mac specific things
+(setq mac-option-key-is-meta nil)
+(setq mac-option-modifier 'super)
+(setq mac-command-modifier 'meta)
 
 (require 'package) ;; You might already have this line
 (add-to-list 'package-archives
@@ -19,15 +24,17 @@
     (package-install package-name)))
 
 (mapc 'load-or-install-package '(autopair
-				 company
-				 dired-details
-				 dired-subtree
-				 flycheck
-				 god-mode
-				 god-mode-isearch
-				 google-this
-				 paredit
-				 shell-toggle))
+                                 company
+                                 dired-details
+                                 dired-subtree
+                                 flycheck
+                                 go-mode
+                                 god-mode
+                                 god-mode-isearch
+                                 google-this
+                                 paredit
+                                 shell-toggle
+                                 xcscope))
 
 ;; Customizations
 (custom-set-variables
@@ -35,12 +42,24 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(ansi-color-names-vector ["#212526" "#ff4b4b" "#b4fa70" "#fce94f" "#729fcf" "#ad7fa8" "#8cc4ff" "#eeeeec"])
- '(company-backends (quote (company-elisp company-bbdb company-nxml company-css company-eclim company-semantic company-clang company-xcode company-ropemacs company-cmake company-capf (company-dabbrev-code company-gtags company-etags company-keywords) company-oddmuse company-files company-dabbrev)))
+ '(ansi-color-names-vector
+   ["#212526" "#ff4b4b" "#b4fa70" "#fce94f" "#729fcf" "#ad7fa8" "#8cc4ff" "#eeeeec"])
+ '(company-backends
+   (quote
+    (company-elisp company-bbdb company-nxml company-css company-eclim company-semantic company-clang company-xcode company-ropemacs company-cmake company-capf
+                   (company-dabbrev-code company-gtags company-etags company-keywords)
+                   company-oddmuse company-files company-dabbrev)))
  '(company-idle-delay 0.1)
  '(company-minimum-prefix-length 1)
  '(custom-enabled-themes (quote (tango-dark)))
- '(custom-safe-themes (quote ("c40361c0bbeb6ad640e66234c7f903c84cf667e8a0162630040866b1f9275a18" default))))
+ '(custom-safe-themes
+   (quote
+    ("c40361c0bbeb6ad640e66234c7f903c84cf667e8a0162630040866b1f9275a18" default)))
+ '(package-selected-packages
+   (quote
+    (go-mode xcscope shell-toggle paredit google-this god-mode flycheck dired-subtree dired-details company autopair))))
+
+(add-to-list 'company-backends '(company-capf company-dabbrev-code))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -135,7 +154,7 @@
   "Everytime text is entered in the buffer, a jump is added to the jump-stack. This allows for jumping to last inserted text"
   (when (and
 	 (not (eq last-command 'self-insert-command))
-	 (not (eq last-command 'autopair-backspace))
+	 ;(not (eq last-command 'autopair-backspace))
 	 (not (string-prefix-p "*" (string-trim (buffer-name)))))
     (set-jump-point)))
 
@@ -150,13 +169,16 @@
 (add-hook 'html-mode-hook (lambda () (local-set-key [67108910] (quote sgml-close-tag))))
 (add-hook 'html-mode-hook (lambda () (local-set-key (kbd "TAB") 'sgml-indent-line)))
 
+(add-to-list 'auto-mode-alist '("\\.view\\'" . html-mode))
+
 ;; Add rainbow mode to CSS mode and Javascript mode
 (add-hook 'css-mode-hook 'rainbow-mode)
 (add-hook 'javascript-mode-hook 'rainbow-mode)
 
 ;;; C preferences
-(setq c-default-style "linux")
-(setq-default c-basic-offset 8)
+;;(setq c-default-style "linux")
+(setq c-default-style "gnu")
+(setq-default c-basic-offset 2)
 (add-hook 'c-mode-hook (lambda () (local-set-key (kbd "<f2>") 'man-follow)))
 (add-hook 'c-mode-hook (lambda () (local-set-key (kbd "<f1>") 'delete-other-windows)))
 
@@ -250,8 +272,6 @@
 
 (autopair-global-mode) ;; enable autopair in all buffers
 
-(add-hook 'after-init-hook 'c-turn-on-eldoc-mode)
-
 (global-set-key (kbd "C-q") 'beginning-of-line-text)
 
 (define-key isearch-mode-map (kbd "<escape>") 'god-mode-isearch-activate)
@@ -307,9 +327,41 @@
 
 (global-set-key (kbd "M-,") 'pop-tag-mark)
 
-;; DocView
-(setq doc-view-ghostscript-program "/usr/bin/ghostscript")
+(defadvice find-dired-sentinel (after auto-enter-one-file-found)
+  (when (eq (count-lines (point-min) (point-max)) 5)
+    (autopair-newline)
+    (kill-buffer "*Find*")))
+
+(ad-activate 'find-dired-sentinel)
+
+(defun nf (file-name)
+  "Find FILE-NAME from the project root."
+  (interactive "sFile name: ")
+  (let ((starting-dir (cd ".")))
+    (while (eq nil (string-match ".*/fw-[a-z]*/?$" (pwd)))
+      (cd ".."))
+    (find-name-dired "." file-name)
+    (cd starting-dir)))
 
 (put 'upcase-region 'disabled nil)
+
+(global-set-key (kbd "C-x C-b") 'switch-to-buffer)
+
+(setq ns-function-modifier 'control)
+
+(setq tab-width 4)
+(setq-default indent-tabs-mode nil)
+
+(setq-default c-basic-offset 2)
+;(desktop-save-mode)
+(global-flycheck-mode t)
+(global-company-mode t)
+(global-eldoc-mode t)
+
+(setq exec-path (append '("/usr/local/bin") exec-path))
+
+(cscope-setup)
+
 (provide '.emacs)
-;;; .emacs ends here
+;;; .emacs ends here.
+(put 'downcase-region 'disabled nil)
